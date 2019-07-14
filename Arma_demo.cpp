@@ -3,44 +3,6 @@
 #include <cmath>
 #include <string.h>
 
-//double calcError(arma::mat x) {
-//	arma::mat::iterator it_end = x.end();
-//	double error = 0;
-//	for (arma::mat::iterator it = x.begin(); it != it_end; ++it) {
-//		error += pow(*it, 2);
-//	}
-//	return sqrt(error / float(size(x).n_cols * size(x).n_rows)) * 100.0;
-//}
-//
-//double sigmoid(double x) {
-//	return 1 / (1 + exp(-1 * x));
-//}
-//
-//arma::mat calcSigmoid_d(arma::mat x) {
-//	arma::mat z = x;
-//	arma::mat::iterator it_end = z.end();
-//	for (arma::mat::iterator it = z.begin(); it != it_end; ++it) {
-//		*it = sigmoid(*it)*(1 - sigmoid(*it));
-//	}
-//
-//	return z;
-//}
-//
-//arma::mat calcWeight_delta(arma::mat error, arma::mat out, arma::mat inp) {
-//	arma::mat out_delta = error % calcSigmoid_d(out);
-//	arma::mat deltas = out_delta * inp.t();
-//	return deltas;
-//}
-//
-//arma::mat calcSigmoid(arma::mat x, arma::mat y) {
-//	arma::mat z = x * y;
-//	arma::mat::iterator it_end = z.end();
-//	for (arma::mat::iterator it = z.begin(); it != it_end; ++it) {
-//		*it = sigmoid(*it + 1);
-//	}
-//	return z;
-//}
-
 arma::mat relu(arma::mat input) {
 	arma::mat out = input;
 	arma::mat::iterator it_end = input.end();
