@@ -1,7 +1,6 @@
 #include <iostream>
 #include <armadillo>
 #include <cmath>
-#include <string.h>
 
 arma::mat relu(arma::mat input) {
 	arma::mat out = input;
@@ -126,13 +125,15 @@ void backProp(arma::mat error, arma::mat *W, char sel) {
 
 int main()
 {
-	float error = 0;
-	float learn_rate = 0.3;
+	arma::arma_rng::set_seed_random();
+
+	double error = 0;
+	double learn_rate = 0.4;
 	long long int iteration = 0;
 	arma::mat inp(1, 3, arma::fill::randu);
-	arma::mat l1(1, 2, arma::fill::zeros);
+	arma::mat l1(1, 3, arma::fill::zeros);
 	arma::mat l2(1, 4, arma::fill::zeros);
-	arma::mat out(1, 7, arma::fill::zeros);
+	arma::mat out(1, 3, arma::fill::zeros);
 	arma::mat goal(arma::size(out), arma::fill::randu);
 	arma::mat loss(arma::size(out), arma::fill::zeros);
 
@@ -189,7 +190,7 @@ int main()
 		w1 += (trans(inp) * relu_d(l1)) * accu(trans(sigmoid_d(l2)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out))) * learn_rate;
 		bias_l1 += relu_d(l1) * accu(trans(sigmoid_d(l2)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out))) * learn_rate;
 		iteration++;
-	} while (error > 0.000000002);
+	} while (error > 0.00000002);
 
 	std::cout << "input :" << std::endl << inp << std::endl;
 	std::cout << "layer 1 :" << std::endl << relu(l1) << std::endl;
