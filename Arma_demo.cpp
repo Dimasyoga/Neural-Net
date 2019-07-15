@@ -128,26 +128,30 @@ int main()
 	arma::arma_rng::set_seed_random();
 
 	double error = 0;
-	double learn_rate = 0.4;
+	double learn_rate = 0.3;
 	long long int iteration = 0;
-	arma::mat inp(1, 3, arma::fill::randu);
-	arma::mat l1(1, 3, arma::fill::zeros);
-	arma::mat l2(1, 4, arma::fill::zeros);
+	arma::mat inp(1, 7, arma::fill::randu);
+	arma::mat l1(1, 6, arma::fill::zeros);
+	arma::mat l2(1, 3, arma::fill::zeros);
+	arma::mat l3(1, 2, arma::fill::zeros);
 	arma::mat out(1, 3, arma::fill::zeros);
 	arma::mat goal(arma::size(out), arma::fill::randu);
 	arma::mat loss(arma::size(out), arma::fill::zeros);
 
 	arma::mat w1(inp.n_cols, l1.n_cols, arma::fill::randu);
 	arma::mat w2(l1.n_cols, l2.n_cols, arma::fill::randu);
-	arma::mat w3(l2.n_cols, out.n_cols, arma::fill::randu);
+	arma::mat w3(l2.n_cols, l3.n_cols, arma::fill::randu);
+	arma::mat w4(l3.n_cols, out.n_cols, arma::fill::randu);
 
 	arma::mat bias_l1(arma::size(l1), arma::fill::ones);
 	arma::mat bias_l2(arma::size(l2), arma::fill::ones);
+	arma::mat bias_l3(arma::size(l3), arma::fill::ones);
 	arma::mat bias_out(arma::size(out), arma::fill::ones);
 
 	std::cout << "input :" << std::endl << inp << std::endl;
 	std::cout << "layer 1 :" << std::endl << relu(l1) << std::endl;
 	std::cout << "layer 2 :" << std::endl << sigmoid(l2) << std::endl;
+	std::cout << "layer 3 :" << std::endl << relu(l3) << std::endl;
 	std::cout << "output :" << std::endl << softmax(out) << std::endl;
 	std::cout << std::endl;
 	std::cout << "goal :" << std::endl << goal << std::endl;
@@ -155,8 +159,10 @@ int main()
 	std::cout << "weight 1 :" << std::endl << w1 << std::endl;
 	std::cout << "weight 2 :" << std::endl << w2 << std::endl;
 	std::cout << "weight 3 :" << std::endl << w3 << std::endl;
+	std::cout << "weight 4 :" << std::endl << w3 << std::endl;
 	std::cout << "bias layer 1 :" << std::endl << bias_l1 << std::endl;
 	std::cout << "bias layer 2 :" << std::endl << bias_l2 << std::endl;
+	std::cout << "bias layer 3 :" << std::endl << bias_l3 << std::endl;
 	std::cout << "bias layer output :" << std::endl << bias_out << std::endl;
 
 	system("pause");
@@ -165,7 +171,8 @@ int main()
 		//forward propagation
 		l1 = calculateLayer(inp, w1, bias_l1);
 		l2 = calculateLayer(relu(l1), w2, bias_l2);
-		out = calculateLayer(sigmoid(l2), w3, bias_out);
+		l3 = calculateLayer(sigmoid(l2), w3, bias_l3);
+		out = calculateLayer(relu(l3), w4, bias_out);
 
 		loss = quadraticLoss(softmax(out), goal);
 		
@@ -181,20 +188,25 @@ int main()
 
 		//back propagation
 
-		w3 += trans(sigmoid(l2)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out)) * learn_rate;
+		w4 += trans(relu(l3)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out)) * learn_rate;
 		bias_out += quadraticLoss_d(softmax(out), goal) % softmax_d(out) * learn_rate;
 
-		w2 += (trans(relu(l1)) * sigmoid_d(l2)) * accu(quadraticLoss_d(softmax(out), goal) % softmax_d(out)) * learn_rate;
-		bias_l2 += sigmoid_d(l2) * accu(quadraticLoss_d(softmax(out), goal) % softmax_d(out)) * learn_rate;
+		w3 += (trans(sigmoid(l2)) * relu_d(l3)) * accu(quadraticLoss_d(softmax(out), goal) % softmax_d(out)) * learn_rate;
+		bias_l3 += relu_d(l3) * accu(quadraticLoss_d(softmax(out), goal) % softmax_d(out)) * learn_rate;
 
-		w1 += (trans(inp) * relu_d(l1)) * accu(trans(sigmoid_d(l2)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out))) * learn_rate;
-		bias_l1 += relu_d(l1) * accu(trans(sigmoid_d(l2)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out))) * learn_rate;
+		w2 += (trans(relu(l1)) * sigmoid_d(l2)) * accu(trans(relu_d(l3)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out))) * learn_rate;
+		bias_l2 += sigmoid_d(l2) * accu(trans(relu_d(l3)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out))) * learn_rate;
+
+		w1 += (trans(inp) * relu_d(l1)) * accu(trans(sum(trans(relu_d(l3)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out)))) * sigmoid_d(l2)) * learn_rate;
+		bias_l1 += relu_d(l1) * accu(trans(sum(trans(relu_d(l3)) * (quadraticLoss_d(softmax(out), goal) % softmax_d(out)))) * sigmoid_d(l2)) * learn_rate;
+
 		iteration++;
-	} while (error > 0.00000002);
+	} while (error > 0.0001 / out.n_elem);
 
 	std::cout << "input :" << std::endl << inp << std::endl;
 	std::cout << "layer 1 :" << std::endl << relu(l1) << std::endl;
 	std::cout << "layer 2 :" << std::endl << sigmoid(l2) << std::endl;
+	std::cout << "layer 3 :" << std::endl << relu(l3) << std::endl;
 	std::cout << "output :" << std::endl << softmax(out) << std::endl;
 	std::cout << std::endl;
 	std::cout << "goal :" << std::endl << goal << std::endl;
@@ -202,8 +214,10 @@ int main()
 	std::cout << "weight 1 :" << std::endl << w1 << std::endl;
 	std::cout << "weight 2 :" << std::endl << w2 << std::endl;
 	std::cout << "weight 3 :" << std::endl << w3 << std::endl;
+	std::cout << "weight 4 :" << std::endl << w3 << std::endl;
 	std::cout << "bias layer 1 :" << std::endl << bias_l1 << std::endl;
 	std::cout << "bias layer 2 :" << std::endl << bias_l2 << std::endl;
+	std::cout << "bias layer 3 :" << std::endl << bias_l3 << std::endl;
 	std::cout << "bias layer output :" << std::endl << bias_out << std::endl;
 
 	std::cout << "Error : " << error << std::endl;
